@@ -1,0 +1,59 @@
+---
+  - hosts: dockerv
+    become: true
+    vars:
+      packages_to_remove:
+        - docker
+        - docker-engine
+        - docker.io
+        - containerd
+        - runc
+      packages_to_install:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+      docker_packages:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io 
+    tasks:
+      - name: remove old packages
+        apt:
+          name: "{{ packages_to_remove }}"
+          state: absent
+      - name: apt update
+        apt:
+          update_cache: yes
+      - name: install dependencies
+        apt:
+          name: "{{ packages_to_install }}"
+          state: present
+      - name: Add Docker GPG
+        apt_key:
+          url: https://download.docker.com/linux/ubuntu/gpg
+          keyring: /usr/share/keyrings/docker-archive-keyring.gpg
+          state: present
+      - name: lsb_release
+        command: lsb_release -cs
+        register: result
+      - name: Add Repository
+        apt_repository:
+                # repo: deb https://download.docker.com/linux/ubuntu "{{ result.stdout }}" stable
+           repo: deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu "{{ result.stdout }}" stable
+           filename: docker
+           state: present
+      - name: apt update
+        apt:
+          update_cache: yes
+      - name: install docker packages
+        apt:
+          name: "{{ docker_packages }}"
+      - name: docker version
+        command: docker -v
+        register: dv
+      - name: print docker version
+        debug:
+          msg: "{{ dv.stdout}}"
+            

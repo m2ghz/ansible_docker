@@ -1,0 +1,11 @@
+[all]
+#node1
+#node2
+
+node1
+node2
+#node3 ansible_user=ubuntu
+
+[dockerv]
+node1
+node2
